@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: foo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    ingress/http: "true"
+  name: foo
+  labels:
+    app: foo
+spec:
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 5678
+  selector:
+    app: foo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: foo
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: foo
+        version: v1
+    spec:
+      serviceAccountName: foo
+      containers:
+        - name: foo
+          imagePullPolicy: IfNotPresent
+          image: hashicorp/http-echo:0.2.3
+          args:
+            - "-text=foo"
+          ports:
+            - containerPort: 5678
